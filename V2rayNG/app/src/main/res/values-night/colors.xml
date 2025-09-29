@@ -3,8 +3,10 @@
     <color name="color_fab_active">#f97910</color>
     <color name="color_fab_inactive">#646464</color>
     <color name="color_secondary">#BDBDBD</color>
-    <color name="divider_color_light">#424242</color>
+    <color name="divider_color_light">#E0E0E0</color>
+    <color name="colorBackgroundDark">#1A1423</color>
 
-    <color name="colorPrimary">#212121</color>
+
+    <color name="colorPrimary">#1A1423</color>
     <color name="colorAccent">#FFFFFF</color>
 </resources>
