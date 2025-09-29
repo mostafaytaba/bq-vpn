@@ -41,10 +41,12 @@ import com.v2ray.ang.helper.SimpleItemTouchHelperCallback
 import com.v2ray.ang.handler.V2RayServiceManager
 import com.v2ray.ang.util.Utils
 import com.v2ray.ang.viewmodel.MainViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.net.URL
 
 class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedListener {
     private val binding by lazy {
@@ -123,13 +125,29 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             importBatchConfig(it.data?.getStringExtra("SCAN_RESULT"))
         }
     }
+    private fun importFromUrl() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // دانلود متن از لینک
+                val text = URL(
+                    "https://raw.githubusercontent.com/Kwinshadow/TelegramV2rayCollector/main/sublinks/vless.txt"
+                ).readText()
+    
+                launch(Dispatchers.Main) {
+                    importBatchConfig(text)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         title = getString(R.string.title_server)
         setSupportActionBar(binding.toolbar)
-
+        importFromUrl() 
         binding.fab.setOnClickListener {
             if (mainViewModel.isRunning.value == true) {
                 V2RayServiceManager.stopVService(this)
@@ -144,6 +162,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
                 startV2Ray()
             }
         }
+
         binding.layoutTest.setOnClickListener {
             if (mainViewModel.isRunning.value == true) {
                 setTestState(getString(R.string.connection_test_testing))
