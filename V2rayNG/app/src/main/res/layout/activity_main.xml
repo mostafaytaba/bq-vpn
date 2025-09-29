@@ -17,6 +17,7 @@
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/toolbar"
+                android:visibility="gone"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize" />
 
@@ -29,19 +30,22 @@
             <androidx.coordinatorlayout.widget.CoordinatorLayout
                 android:id="@+id/main_content"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent">
+                android:layout_height="match_parent"
+                android:background="@color/colorBackgroundDark">
 
+                <!-- محتواهای مخفی یا غیر فعال -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="vertical">
+                    android:orientation="vertical"
+                    android:visibility="gone">
 
                     <com.google.android.material.progressindicator.LinearProgressIndicator
                         android:id="@+id/pb_waiting"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:indeterminate="true"
-                        android:visibility="invisible"
+                        android:visibility="gone"
                         app:indicatorColor="@color/color_fab_active" />
 
                     <com.google.android.material.tabs.TabLayout
@@ -49,6 +53,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:padding="@dimen/padding_spacing_dp8"
+                        android:visibility="gone"
                         app:tabIndicatorFullWidth="false"
                         app:tabMode="scrollable"
                         app:tabTextAppearance="@style/TabLayoutTextStyle" />
@@ -58,8 +63,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="0dp"
                         android:layout_weight="1"
-                        android:nextFocusRight="@+id/fab"
-                        android:scrollbars="vertical" />
+                        android:scrollbars="vertical"
+                        android:visibility="gone" />
 
                     <LinearLayout
                         android:id="@+id/layout_test"
@@ -67,14 +72,13 @@
                         android:layout_height="@dimen/view_height_dp64"
                         android:clickable="true"
                         android:focusable="true"
-                        android:nextFocusLeft="@+id/recycler_view"
-                        android:nextFocusRight="@+id/fab"
                         android:orientation="vertical">
 
                         <View
                             android:layout_width="wrap_content"
                             android:layout_height="1dp"
-                            android:background="@color/divider_color_light" />
+                            android:background="@color/divider_color_light"
+                            android:visibility="gone" />
 
                         <TextView
                             android:id="@+id/tv_test_state"
@@ -85,30 +89,60 @@
                             android:minLines="1"
                             android:paddingStart="@dimen/padding_spacing_dp16"
                             android:text="@string/connection_test_pending"
-                            android:textAppearance="@style/TextAppearance.AppCompat.Small" />
+                            android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                            android:visibility="gone" />
 
                     </LinearLayout>
                 </LinearLayout>
 
+                <!-- FrameLayout برای مرکز صفحه -->
+
+                <!-- متن‌های وسط صفحه -->
                 <FrameLayout
+                    android:id="@+id/frameLayout"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:layout_anchor="@+id/fab"
+                    app:layout_anchorGravity="center" />
+
+                <TextView
+                    android:id="@+id/connecting"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|end"
-                    android:layout_marginEnd="@dimen/padding_spacing_dp16">
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="190dp"
+                    android:fontFamily="@font/russo_regular"
+                    android:gravity="center"
+                    android:text="Connecting Time"
+                    android:textColor="@color/divider_color_light"
+                    android:textSize="17sp" />
 
-                    <com.google.android.material.floatingactionbutton.FloatingActionButton
-                        android:id="@+id/fab"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom|end"
-                        android:layout_marginBottom="@dimen/view_height_dp36"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:nextFocusLeft="@+id/layout_test"
-                        android:src="@drawable/ic_play_24dp"
-                        app:layout_anchorGravity="bottom|right|end" />
+                <TextView
+                    android:id="@+id/tvTimer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:layout_marginTop="220dp"
+                    android:fontFamily="@font/russo_regular"
+                    android:gravity="center"
+                    android:text="00:00:00"
+                    android:textColor="@color/divider_color_light"
+                    android:textSize="40sp" />
 
-                </FrameLayout>
+                <!-- FAB بزرگ و وسط صفحه -->
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fab"
+                    android:layout_width="180dp"
+                    android:layout_height="180dp"
+                    android:layout_gravity="center"
+                    android:scaleType="centerInside"
+                    app:fabCustomSize="180dp"
+                    app:layout_anchor="@+id/frameLayout"
+                    app:layout_anchorGravity="center"
+                    app:maxImageSize="96dp"
+                    app:srcCompat="@drawable/power_switch"
+                    app:useCompatPadding="true" />
+
             </androidx.coordinatorlayout.widget.CoordinatorLayout>
         </RelativeLayout>
     </LinearLayout>
@@ -116,13 +150,11 @@
     <com.google.android.material.navigation.NavigationView
         android:id="@+id/nav_view"
         android:layout_width="wrap_content"
+        android:visibility="gone"
         android:layout_height="match_parent"
         android:layout_gravity="start"
         app:headerLayout="@layout/nav_header"
         app:itemIconTint="@color/colorAccent"
-        app:menu="@menu/menu_drawer">
-
-    </com.google.android.material.navigation.NavigationView>
+        app:menu="@menu/menu_drawer" />
 
 </androidx.drawerlayout.widget.DrawerLayout>
-
