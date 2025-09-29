@@ -47,6 +47,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.net.URL
+import android.os.Handler
+import android.os.Looper
 
 class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedListener {
     private val binding by lazy {
@@ -128,19 +130,63 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
     private fun importFromUrl() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // دانلود متن از لینک
                 val text = URL(
                     "https://raw.githubusercontent.com/Kwinshadow/TelegramV2rayCollector/main/sublinks/vless.txt"
                 ).readText()
     
                 launch(Dispatchers.Main) {
+                    // 1. ایمپورت کانفیگ‌ها
                     importBatchConfig(text)
+    
+                    // 2. صبر برای اطمینان از ذخیره کامل
+                    delay(5000)
+    
+                    val guids = MmkvManager.decodeServerList()
+                    MmkvManager.clearAllTestDelayResults(guids)
+    
+                    // 3. شروع تست پینگ
+                    toast(getString(R.string.connection_test_testing_count, guids.size))
+                    mainViewModel.testAllRealPing()
+    
+                    // 4. صبر برای ثبت نتایج
+                    launch(Dispatchers.Default) {
+                        delay(5000)
+    
+                        var bestGuid: String? = null
+                        var lowestPing = Long.MAX_VALUE
+    
+                        for (guid in guids) {
+                            // گرفتن مقدار پینگ
+                            val ping = MmkvManager
+                                .decodeServerAffiliationInfo(guid)
+                                ?.testDelayMillis
+    
+                            // رد کردن مقادیر null یا -1
+                            if (ping != null && ping >= 100 && ping < lowestPing) {
+                                lowestPing = ping
+                                bestGuid = guid
+                            }
+                        }
+    
+                        // اگر سرور معتبر پیدا شد
+                        bestGuid?.let {
+                            MmkvManager.setSelectServer(it)
+                            withContext(Dispatchers.Main) {
+                                toast("بهترین کانفیگ با پینگ $lowestPing ms انتخاب شد")
+                            }
+                        } ?: withContext(Dispatchers.Main) {
+                            toast("هیچ کانفیگ معتبری پیدا نشد")
+                        }
+                    }
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
             }
         }
     }
+    
+    
+    
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -214,7 +260,22 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             }
         })
     }
-
+    private var timerSeconds = 0
+    private val timerHandler = Handler(Looper.getMainLooper())
+    private val timerRunnable = object : Runnable {
+        override fun run() {
+            timerSeconds++
+            updateTimerUI(timerSeconds)
+            timerHandler.postDelayed(this, 1000)
+        }
+    }
+    
+    private fun updateTimerUI(seconds: Int) {
+        val hours = seconds / 3600
+        val minutes = (seconds % 3600) / 60
+        val sec = seconds % 60
+        binding.tvTimer.text = String.format("%02d:%02d:%02d", hours, minutes, sec)
+    }
     @SuppressLint("NotifyDataSetChanged")
     private fun setupViewModel() {
         mainViewModel.updateListAction.observe(this) { index ->
@@ -228,15 +289,25 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
         mainViewModel.isRunning.observe(this) { isRunning ->
             adapter.isRunning = isRunning
             if (isRunning) {
-                binding.fab.setImageResource(R.drawable.ic_stop_24dp)
+//                binding.fab.setImageResource(R.drawable.power_switch_70dp)
                 binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_active))
                 setTestState(getString(R.string.connection_connected))
                 binding.layoutTest.isFocusable = true
+        
+                // START TIMER
+                timerHandler.removeCallbacks(timerRunnable)
+                timerHandler.post(timerRunnable)
+        
             } else {
-                binding.fab.setImageResource(R.drawable.ic_play_24dp)
+//                binding.fab.setImageResource(R.drawable.power_switch_70dp)
                 binding.fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.color_fab_inactive))
                 setTestState(getString(R.string.connection_not_connected))
                 binding.layoutTest.isFocusable = false
+        
+                // STOP TIMER
+                timerHandler.removeCallbacks(timerRunnable)
+                timerSeconds = 0
+                updateTimerUI(timerSeconds)
             }
         }
         mainViewModel.startListenBroadcast()
